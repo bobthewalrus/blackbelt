@@ -2,11 +2,54 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Success</title>
+    <title>Quotations</title>
   </head>
   <body>
     <h1>Success!</h1>
-    <p> Welcome {{request.session.user.firstname}}! You're logged in!</p>
+    {% if messages %}
+    <ul class='messages2'>
+        {% for message in messages %}
+        <li{% if message.tags %} class='{{ message.tags}}'{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <p> Welcome {{User.firstname}}! You're logged in!</p>
+    <h2>Quotable Quotes:</h2>
+
+    {% for x in quotationlist %}
+        <h4>Quoted by: {{x.author}}</h4>
+        <p>{{x.quotation}}</p>
+        <p>Posted by: <a href='/user/{{x.user.id}}' name='userlink'>{{x.user.firstname}} {{x.user.lastname}}</a></p>
+        <form action='/faveon' method='POST' name='addtofaves'>
+            {% csrf_token %}
+            <input type='submit' value='Add to my favorites'>
+            <input type='hidden' name='onid' value='{{x.id}}'>
+        </form>
+    {% endfor %}
+
+
+    <h2>My Favorites:</h2>
+    {% for i in favoriteslist %}
+        <h4>Quoted by: {{i.author}}</h4>
+        <p>{{i.quotation}}</p>
+        <p>Posted by:  <a href='/user/{{i.user.id}}' name='userlink'>{{i.user.firstname}} {{i.user.lastname}} </a></p>
+        <form action='/faveoff' method='POST' name="removefromfaves" id='removefromfaves'>
+            {% csrf_token %}
+            <input type='submit' value='Remove from my favorites'>
+            <input type='hidden' name='offid' value='{{i.id}}'>
+
+        </form>
+    {% endfor %}
+
+    <h2>Add a new quote:</h2>
+
+    <form action='/quotevalidate' method='POST' name='addquote' id='addquote'>
+        {% csrf_token %}
+        <p>Quote Author:<input type='text' name='author'></p>
+        <p>Quotation:<input type='text' name='quotation'></p>
+        <input type='submit' value='Submit'>
+    </form>
+
     <a href='{% url 'logout' %}'>Logout</a>
 
 

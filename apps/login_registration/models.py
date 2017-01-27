@@ -5,6 +5,26 @@ import bcrypt, re
 
 emailregex = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.+_-]+\.[a-zA-Z]+$')
 nameregex = re.compile(r'^[a-zA-Z]+$')
+class QuoteManager(models.Manager):
+    def quotevalidator(self,post, id):
+        user=User.objects.get(id=id)
+        errors = self.validate_quote(post)
+        if len(errors) >0:
+            print errors
+            return (False, errors)
+        quote = self.create(author=post['author'], quotation= post['quotation'], user=user)
+        return (True, quote)
+
+    def validate_quote(self,post):
+        author = post['author'].lower()
+        quotation = post['quotation'].lower()
+
+        errors= []
+        if len(author) <4:
+            errors.append("Author name must be more than 3 characters.")
+        if len(quotation) <11:
+            errors.append('Quotation must be more than 10 characters.')
+        return errors
 
 class UserManager(models.Manager):
     def registervalidation(self,post):
@@ -77,6 +97,11 @@ class User(models.Model):
     lastname = models.CharField(max_length=255)
     email = models.CharField(max_length=255)
     pw_hash = models.CharField(max_length=255)
-
-
     objects = UserManager()
+
+class Quote(models.Model):
+    author = models.CharField(max_length=255)
+    quotation = models.CharField(max_length=255)
+    favorites = models.BooleanField(default=False)
+    user = models.ForeignKey(User)
+    objects = QuoteManager()

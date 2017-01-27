@@ -1,5 +1,5 @@
 from django.shortcuts import render, HttpResponse, redirect
-from models import User
+from models import User, Quote
 from django.contrib import messages
 from django.urls import reverse
 
@@ -25,6 +25,63 @@ def loginvalidate(request):
             return redirect(reverse('index'))
         return login(request, result[1])
     return redirect('/')
+def quotevalidate(request):
+    if request.method =='POST':
+        print "*****Validating quote**********"
+        print request.session['user']['id']
+        result = Quote.objects.quotevalidator(request.POST, request.session['user']['id'])
+        if not result[0]:
+            print_messages(request, result[1])
+            return redirect('/success')
+
+        return redirect('/success')
+
+# t = TemperatureData.objects.get(id=1)
+# t.value = 999  # change field
+# t.save() # this will update only
+
+
+    return redirect('/success')
+def faveon(request):
+    if request.method == 'POST':
+        print "*********Adding to favorites list*******"
+        favoritecheck = request.POST['onid']
+        favoriteswitch = Quote.objects.get(id=favoritecheck)
+
+        print favoritecheck
+        print favoriteswitch
+        print favoriteswitch.favorites
+        favoriteswitch.favorites = True
+        favoriteswitch.save()
+        print favoriteswitch.favorites
+
+
+    return redirect('/success')
+def faveoff(request):
+    if request.method == 'POST':
+        print "*********Removing from favorites list*******"
+        favoritecheck = request.POST['offid']
+        print favoritecheck
+        favoriteswitch = Quote.objects.get(id=favoritecheck)
+
+        print favoritecheck
+        print favoriteswitch
+        print favoriteswitch.favorites
+        favoriteswitch.favorites = False
+        favoriteswitch.save()
+        print favoriteswitch.favorites
+
+
+    return redirect('/success')
+
+def userview(request, userid):
+    print "Did userid pass? ===>"+userid
+    getuser = Quote.objects.filter(user=userid)
+    print getuser
+    userdict = {
+    "userposts":getuser,
+    }
+    return render(request, 'login_registration/userview.html', userdict)
 
 def registervalidate(request):
     result= User.objects.registervalidation(request.POST)
@@ -38,7 +95,14 @@ def registervalidate(request):
 def success(request):
     if not 'user' in request.session:
         return redirect('/')
-    return render(request, 'login_registration/success.html')
+    quotes = Quote.objects.filter(favorites=False)
+    faves= Quote.objects.filter(favorites=True)
+
+    quotecontext = {
+    "quotationlist":quotes,
+    "favoriteslist":faves
+    }
+    return render(request, 'login_registration/success.html',quotecontext)
 
 def login(request, user):
     print "Here at Login"
@@ -48,8 +112,6 @@ def login(request, user):
     'last_name' : user.lastname,
     'email' : user.email,
     }
-
-
     return redirect('/success')
 def logout(request):
     request.session.clear()
